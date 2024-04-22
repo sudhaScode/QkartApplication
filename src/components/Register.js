@@ -9,9 +9,29 @@ import Header from "./Header";
 import "./Register.css";
 
 const Register = () => {
+  const errorData = {
+    username: false,
+    usernamelength: false,
+    password: false,
+    passwordlength: false,
+    passwordmismatch: false };
+  const [errors, setErrors] = useState(errorData);
   const { enqueueSnackbar } = useSnackbar();
+  //username: string, password: string, confirmPassword: string
+  const [userName, setUserName ] = useState("");
+  const [password, setPassword]= useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [responseStatus, setResponseStatus] = useState(false);
+  
 
-
+  const handleRegistration = (message, status) => {
+    const key = enqueueSnackbar(message, {
+      variant: status, // Adjust variant as needed
+    });
+   // console.log(key)
+  
+  };
+                                                             
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement the register function
   /**
    * Definition for register handler
@@ -36,6 +56,41 @@ const Register = () => {
    * }
    */
   const register = async (formData) => {
+    let URL = `${config.endpoint}/auth/register`;
+    //console.log(URL,"URL DEBUG");
+    const {uname, pword} = formData;
+    formData = {
+      username: uname,
+      password: pword,
+    } 
+    /**
+    
+     */
+   try{
+    const response = await axios.post(URL, formData)
+    //console.log(response, "RESPONSE DEBUG")
+    setResponseStatus(false);
+    if (response.status === 201 || response.status ===200){
+      handleRegistration("Registred Successfully","success");
+     // console.log(response)
+    }
+    else {
+      // Handle other unexpected error codes
+      handleRegistration("Something unexpected caused","failure");
+      console.error("Unexpected error:", response.status, response.data);
+    }
+   }
+   catch(error){
+    setResponseStatus(false);
+    if(error.response){
+      handleRegistration("Username is already taken","error");
+      console.log(error.message);
+    }
+    else{
+      handleRegistration("Something unexpected caused","failure");
+      console.log("Somethinng else error: ", error);
+    }
+   }
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
@@ -57,7 +112,74 @@ const Register = () => {
    * -    Check that confirmPassword field has the same value as password field - Passwords do not match
    */
   const validateInput = (data) => {
+    
+    let flag =true;
+    const {uname, pword, cpword} = data;
+    if(!uname){
+      setErrors((prevState)=>({...prevState, username: true}));
+      //console.log(errors.username, "username debug")
+      handleRegistration("Username is required field", "warning")
+      flag = false;
+    }
+    else{
+      if(uname.length <6){
+        setErrors((prevState)=>({...prevState, usernamelength: true}));
+       // console.log(errors.username, "username length debug")
+       handleRegistration("Username must be at least 6 characters", "warning")
+       flag = false;
+      }
+    }
+    if(!pword){
+      setErrors((prevState)=>({...prevState, password:true}));
+      //console.log(errors.password, "password debug");
+      handleRegistration("Password is required field", "warning")
+      flag = false;
+    }
+    else{
+      if(pword.length <6){
+        setErrors((prevState)=>({...prevState, passwordlength:true}));
+        //console.log(errors.password, "password length debug");
+        handleRegistration("Password must be at least 6 characters", "warning")
+        flag = false;
+      }
+    }
+    if(cpword !== pword){
+      setErrors((prevState)=>({...prevState, passwordmismatch: true}));
+      //console.log(errors.passwordmismatch, "password mismatch debug");
+      handleRegistration("Passwords do not match", "warning")
+      flag = false;
+    }
+    return flag;
   };
+  const userInputHandler = (event )=>{
+    setErrors(errorData);
+    const triggeredEvent = event.target.name;
+    if(triggeredEvent === "username"){
+       setUserName(event.target.value)
+       //console.log(event.target.value, "USERNAME")
+    }
+    else if(triggeredEvent === "password"){
+        setPassword(event.target.value);
+        //console.log(event.target.value, "PASSWORD")
+    }
+    else{
+      setConfirmPassword(event.target.value)
+     // console.log(event.target.value, "CONFIRM PASSWORD")
+    }
+  }
+  const onSumbitHandler=()=>{
+    setResponseStatus(true);
+    const data = {
+      uname: userName,
+      pword: password,
+      cpword : confirmPassword
+    }
+    const log = validateInput(data);
+    if(log){
+      register(data)
+    }
+  }
+  
 
   return (
     <Box
@@ -68,7 +190,7 @@ const Register = () => {
     >
       <Header hasHiddenAuthButtons />
       <Box className="content">
-        <Stack spacing={2} className="form">
+        <Stack spacing={1} className="form">
           <h2 className="title">Register</h2>
           <TextField
             id="username"
@@ -77,8 +199,11 @@ const Register = () => {
             title="Username"
             name="username"
             placeholder="Enter Username"
+            onChange={userInputHandler}
             fullWidth
           />
+          {errors.username && <p className= "error">* Username is required field</p>}
+          {errors.usernamelength && <p className= "error">*Username must be at least 6 characters</p>}
           <TextField
             id="password"
             variant="outlined"
@@ -88,18 +213,25 @@ const Register = () => {
             helperText="Password must be atleast 6 characters length"
             fullWidth
             placeholder="Enter a password with minimum 6 characters"
+            onChange={userInputHandler}
           />
+          {errors.password && <p className= "error">* Password is required field</p>}
+          {errors.passwordlength && <p className= "error">* Password must be at least 6 characters</p>}
           <TextField
             id="confirmPassword"
             variant="outlined"
             label="Confirm Password"
             name="confirmPassword"
+
             type="password"
+            onChange={userInputHandler}
             fullWidth
           />
-           <Button className="button" variant="contained">
-            Register Now
-           </Button>
+          {errors.passwordmismatch && <p className= "error">* Passwords do not match</p>}
+          {responseStatus?
+            <Box className="indicator"><CircularProgress size={30}/></Box>:<Button className="button" variant="contained" type="submit" onClick={onSumbitHandler}>
+           Register Now
+          </Button>}
           <p className="secondary-action">
             Already have an account?{" "}
              <a className="link" href="#">
