@@ -100,9 +100,9 @@ describe("Login Page", () => {
 
   it("should throw error if username field is empty", async () => {
     const passwordInput = screen.getByLabelText(/password/i);
-
+    
     userEvent.type(passwordInput, "learnbydoing");
-
+    //expect(passwordInput).toHaveValue("learnbydoing");
     userEvent.click(screen.getByText(/login to qkart/i));    
 
     const alert = await screen.findByRole("alert");
@@ -114,7 +114,7 @@ describe("Login Page", () => {
     const usernameInput = screen.getByLabelText(/username/i);
 
     userEvent.type(usernameInput, "crio.do");
-
+    expect(usernameInput).toHaveValue("crio.do");
     userEvent.click(screen.getByText(/login to qkart/i));    
 
     const alert = await screen.findByRole("alert");

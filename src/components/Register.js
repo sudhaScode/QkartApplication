@@ -2,11 +2,12 @@ import { Button, CircularProgress, Stack, TextField } from "@mui/material";
 import { Box } from "@mui/system";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
 import "./Register.css";
+import { useHistory, Link } from "react-router-dom";
 
 const Register = () => {
   const errorData = {
@@ -22,6 +23,8 @@ const Register = () => {
   const [password, setPassword]= useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [responseStatus, setResponseStatus] = useState(false);
+  const inputRef = useRef(null);
+  let history = useHistory();
   
 
   const handleRegistration = (message, status) => {
@@ -33,11 +36,6 @@ const Register = () => {
   };
                                                              
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement the register function
-import { useHistory, Link } from "react-router-dom";
-
-const Register = () => {
-  const { enqueueSnackbar } = useSnackbar();
-
 
   /**
    * Definition for register handler
@@ -78,6 +76,7 @@ const Register = () => {
     setResponseStatus(false);
     if (response.status === 201 || response.status ===200){
       handleRegistration("Registred Successfully","success");
+      history.push("/login")
      // console.log(response)
     }
     else {
@@ -100,7 +99,6 @@ const Register = () => {
   };
 
   // TODO: CRIO_TASK_MODULE_REGISTER - Implement user input validation logic
-  };
 
   /**
    * Validate the input values so that any bad or illegal values are not passed to the backend.
@@ -124,38 +122,39 @@ const Register = () => {
     let flag =true;
     const {uname, pword, cpword} = data;
     if(!uname){
+      flag = false;
       setErrors((prevState)=>({...prevState, username: true}));
       //console.log(errors.username, "username debug")
-      handleRegistration("Username is required field", "warning")
+      handleRegistration("Username is required field", "warning");
+      setResponseStatus(false);
+    }
+    else if(uname.length <6){
+      setErrors((prevState)=>({...prevState, usernamelength: true}));
+      // console.log(errors.username, "username length debug")
+      handleRegistration("Username must be at least 6 characters", "warning");
+      setResponseStatus(false);
       flag = false;
     }
-    else{
-      if(uname.length <6){
-        setErrors((prevState)=>({...prevState, usernamelength: true}));
-       // console.log(errors.username, "username length debug")
-       handleRegistration("Username must be at least 6 characters", "warning")
-       flag = false;
-      }
-    }
-    if(!pword){
+    else if(!pword){
+      flag = false;
       setErrors((prevState)=>({...prevState, password:true}));
       //console.log(errors.password, "password debug");
-      handleRegistration("Password is required field", "warning")
+      handleRegistration("Password is required field", "warning");
+      setResponseStatus(false);
+    }
+    else if(pword.length <6){
       flag = false;
+      setErrors((prevState)=>({...prevState, passwordlength:true}));
+      //console.log(errors.password, "password length debug");
+      handleRegistration("Password must be at least 6 characters", "warning");
+      setResponseStatus(false);
     }
-    else{
-      if(pword.length <6){
-        setErrors((prevState)=>({...prevState, passwordlength:true}));
-        //console.log(errors.password, "password length debug");
-        handleRegistration("Password must be at least 6 characters", "warning")
-        flag = false;
-      }
-    }
-    if(cpword !== pword){
+    else if(cpword !== pword){
+      flag = false;
       setErrors((prevState)=>({...prevState, passwordmismatch: true}));
       //console.log(errors.passwordmismatch, "password mismatch debug");
-      handleRegistration("Passwords do not match", "warning")
-      flag = false;
+      handleRegistration("Passwords do not match", "warning");
+      setResponseStatus(false);
     }
     return flag;
   };
@@ -182,11 +181,14 @@ const Register = () => {
       pword: password,
       cpword : confirmPassword
     }
-    const log = validateInput(data);
-    if(log){
+    const valid = validateInput(data);
+    if(valid){
       register(data)
     }
   }
+  useEffect(()=>{
+    inputRef?.current?.focus();
+  },[]);
   
 
   return (
@@ -209,6 +211,7 @@ const Register = () => {
             placeholder="Enter Username"
             onChange={userInputHandler}
             fullWidth
+            inputRef={inputRef}
           />
           {errors.username && <p className= "error">* Username is required field</p>}
           {errors.usernamelength && <p className= "error">*Username must be at least 6 characters</p>}
@@ -242,9 +245,9 @@ const Register = () => {
           </Button>}
           <p className="secondary-action">
             Already have an account?{" "}
-             <a className="link" href="#">
+             <Link className="link" to="/login">
               Login here
-             </a>
+             </Link>
           </p>
         </Stack>
       </Box>
