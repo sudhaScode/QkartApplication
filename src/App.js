@@ -21,15 +21,3 @@ function App() {
 }
 
 export default App;
-/**
- <Routes>
-          <Route path="/" element={<Products/>}/>
-          <Route path="/login" element={<Login/>}/>
-            <Route path="/register"   element={<Register/>} />
-        </Routes>
-        Subject
-Routing is not working even though routes defined
-
-Description
-Wrapped the react application with BrowserRouter  and defined the routes in src/App.js only root path is getting navigating for all defined routes.
- */
