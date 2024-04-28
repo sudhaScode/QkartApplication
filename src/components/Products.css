@@ -46,6 +46,7 @@
 
 .search-mobile {
   display: block !important;
+
 }
 
 .search-desktop {
@@ -68,5 +69,29 @@
   }
   .search-desktop {
     display: block !important;
+    min-width: 300px !important;
   }
+}
+.grid-container{
+   margin-top: 2px !important;
+}
+.loader{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 5vh 40vw;
+}
+.not-found{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 5vh 40vw;
+  min-width: 150px;
+}
+.not-found span{
+  padding:10px;
 }

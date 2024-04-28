@@ -8,11 +8,12 @@ import {
 import { Box } from "@mui/system";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { config } from "../App";
 import Footer from "./Footer";
 import Header from "./Header";
 import "./Products.css";
+import ProductCard from "./ProductCard";
 
 // Definition of Data Structures used
 /**
@@ -26,8 +27,11 @@ import "./Products.css";
  * @property {string} _id - Unique ID for the product
  */
 
-
 const Products = () => {
+  const [loader, setLoader] = useState(false);
+  const [products, setProducts] = useState([])
+  const [notFound, setNotFound] = useState(false);
+  const [timerId, setTimerId] = useState(null);
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
@@ -67,6 +71,25 @@ const Products = () => {
    * }
    */
   const performAPICall = async () => {
+    let URL = `${config.endpoint}/products`;
+    setNotFound(false);
+    setLoader(true);
+    try {
+      const response = await axios(URL, { timeout: 3000 });
+
+      if (response.status === 200) {
+        setLoader(false)
+        const data = await response.data;
+        setProducts(data)
+        //console.log("PRODUCTS DEBUG:: ",data)
+        //return data;
+      }
+
+    }
+    catch (error) {
+      console.log("Fetch failed", error)
+    }
+
   };
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Implement search logic
@@ -84,6 +107,29 @@ const Products = () => {
    *
    */
   const performSearch = async (text) => {
+    setNotFound(false);
+    setLoader(true);
+    let URL = `${config.endpoint}/products/search?value=${text}`
+    try {
+      const response = await axios(URL);
+
+      if (response.status === 200) {
+        const data = await response.data;
+        //console.log("RESPONSE DATA::", data);
+        setProducts(data);
+        setLoader(false);
+      }
+
+    }
+    catch (error) {
+      let message = error.message;
+      setLoader(false);
+      if (message.includes("404")) {
+        //console.log("Products not found::",error.message)
+        setNotFound(true);
+      }
+    }
+
   };
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Optimise API calls with debounce search implementation
@@ -98,25 +144,45 @@ const Products = () => {
    *    Timer id set for the previous debounce call
    *
    */
-  const debounceSearch = (event, debounceTimeout) => {
-  };
+  //  const debounce =(fn, delay)=>{
+  //   let timeout;
+  //   return function bouncedFunction(...args){
+  //     const later = () => {
+  //       clearTimeout(timeout);
+  //      fn(...args);
+  //     };
 
+  //     clearTimeout(timeout);
+  //     timeout = setTimeout(later, delay);
+  //   } 
+  //}
 
+const debounceSearch = (event, debounceTimeout) => {
+  let searchKeywords = event.target.value;
+  /*
+  return function bouncedFunction(...args){
+    const later = () => {
+      clearTimeout(timeout);
+      performSearch(...args);
+    };
+ 
+    clearTimeout(timeout);
+    timeout = setTimeout(later, debounceTimeout);
+  }*/
+  clearTimeout(debounceTimeout);
+  const timer = setTimeout(() => performSearch(searchKeywords), 500);
+  setTimerId(timer);
+};
+useEffect(() => {
+  performAPICall();
+}, []);
 
-
-
-
-
-  return (
-    <div>
-      <Header>
-        {/* TODO: CRIO_TASK_MODULE_PRODUCTS - Display search bar in the header for Products page */}
-
-      </Header>
-
-      {/* Search view for mobiles */}
+return (
+  <div>
+    <Header>
+      {/* TODO: CRIO_TASK_MODULE_PRODUCTS - Display search bar in the header for Products page */}
       <TextField
-        className="search-mobile"
+        className="search-desktop"
         size="small"
         fullWidth
         InputProps={{
@@ -126,22 +192,57 @@ const Products = () => {
             </InputAdornment>
           ),
         }}
+        onChange={(event) => (debounceSearch(event, timerId))}
         placeholder="Search for items/categories"
         name="search"
       />
-       <Grid container>
-         <Grid item className="product-grid">
-           <Box className="hero">
-             <p className="hero-heading">
-               India’s <span className="hero-highlight">FASTEST DELIVERY</span>{" "}
-               to your door step
-             </p>
-           </Box>
-         </Grid>
-       </Grid>
-      <Footer />
-    </div>
-  );
-};
+    </Header>
 
+    {/* Search view for mobiles */}
+    <TextField
+      className="search-mobile"
+      size="small"
+      fullWidth
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <Search color="primary" />
+          </InputAdornment>
+        ),
+      }}
+      onChange={(event) => (debounceSearch(event, timerId))}
+      placeholder="Search for items/categories"
+      name="search"
+    />
+    <Grid container>
+      <Grid item className="product-grid">
+        <Box className="hero">
+          <p className="hero-heading">
+            India’s <span className="hero-highlight">FASTEST DELIVERY</span>{" "}
+            to your door step
+          </p>
+        </Box>
+        {loader ?
+          <Box className="loader">
+            <CircularProgress />
+            <span>Loading Products...</span>
+          </Box> :
+          notFound ?
+            <Box className="not-found">
+              <SentimentDissatisfied />
+              <span>No products found</span>
+            </Box> :
+            <Grid container spacing={3} className="grid-container" >
+              {products.map((product) => (
+                <Grid item container xs={12} md={3} sm={6} lg={3} key={product._id}>
+                  <ProductCard product={product} />
+                </Grid>
+              ))}
+            </Grid>}
+      </Grid>
+    </Grid>
+    <Footer />
+  </div>
+);
+};
 export default Products;
