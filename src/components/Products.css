@@ -13,6 +13,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin:6px;
+  margin-bottom: 0px;
+  border-radius: 5px;
 }
 
 .product-grid {
@@ -72,7 +75,8 @@
   }
 }
 .grid-container{
-   margin-top: 2px !important;
+   padding: 1rem !important;
+
 }
 .loader{
   display: flex;
@@ -93,4 +97,8 @@
 }
 .not-found span{
   padding:10px;
+}
+
+.cart-container{
+  margin: 0px;
 }

@@ -15,25 +15,31 @@ const ProductCard = ({ product, handleAddToCart }) => {
   return (
     <Card className="card">
       <CardMedia
-        height="200"
+        height="120"
         component="img"
         image={product.image}
         title={product.name}
       />
-      <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+      <CardContent className= "card-content">
+        
+          {/* <>
+           <Typography gutterBottom variant="subtitle1" component="div">
           {product.name}
         </Typography>
-        <Typography variant="h5" color="text.primary">
+        <Typography variant="h6" color="text.primary">
           ${product.cost}
         </Typography>
+          </> */}
+        <div> {product.name}</div>
+       <p  style={{fontSize: "1rem"}}><strong>${product.cost}</strong></p>
         <Rating name="read-only" value={product.rating} readOnly />
       </CardContent>
       <CardActions sx={{}}>
         <Button
-          sx={{ backgroundColor: "#4caf50" }}
+          sx={{ backgroundColor: "#4caf80" }}
           fullWidth
           variant="contained"
+          className = "card-button"
         >
           {" "}
           <AddShoppingCartOutlined /> Add to Cart

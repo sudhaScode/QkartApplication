@@ -14,6 +14,7 @@ import Footer from "./Footer";
 import Header from "./Header";
 import "./Products.css";
 import ProductCard from "./ProductCard";
+import Cart from "./Cart"
 
 // Definition of Data Structures used
 /**
@@ -40,6 +41,7 @@ const Products = () => {
   const [notFound, setNotFound] = useState(false);
   const [timerId, setTimerId] = useState(null);
   const {enqueueSnackbar} = useSnackbar();
+  const isLogin = localStorage.getItem("token")
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
   /**
@@ -177,8 +179,10 @@ const debounceSearch = (event, debounceTimeout) => {
     clearTimeout(timeout);
     timeout = setTimeout(later, debounceTimeout);
   }*/
-  clearTimeout(debounceTimeout);
-  const timer = setTimeout(() => performSearch(searchKeywords), 500);
+  if(debounceTimeout){
+    clearTimeout(debounceTimeout);
+  }
+  const timer = setTimeout(() => performSearch(searchKeywords), 1000);
   setTimerId(timer);
 };
 
@@ -298,7 +302,7 @@ useEffect(() => {
 
 return (
   <div>
-    <Header>
+    <Header >
       {/* TODO: CRIO_TASK_MODULE_PRODUCTS - Display search bar in the header for Products page */}
       <TextField
         className="search-desktop"
@@ -334,7 +338,7 @@ return (
       name="search"
     />
     <Grid container>
-      <Grid item className="product-grid">
+      <Grid item className="product-grid" md={isLogin? 9:12} sm={12}>
         <Box className="hero">
           <p className="hero-heading">
             India’s <span className="hero-highlight">FASTEST DELIVERY</span>{" "}
@@ -351,13 +355,21 @@ return (
               <SentimentDissatisfied />
               <span>No products found</span>
             </Box> :
-            <Grid container spacing={3} className="grid-container" >
+            <Grid container spacing={2} className="grid-container" >
               {products.map((product) => (
                 <Grid item container xs={12} md={3} sm={6} lg={3} key={product._id}>
                   <ProductCard product={product} />
                 </Grid>
               ))}
             </Grid>}
+      </Grid>
+      <Grid item md={3} sm={12} >
+       {
+        isLogin &&
+        <Box className= "cart-container">
+          <Cart/>
+       </Box>
+       }
       </Grid>
     </Grid>
     <Footer />

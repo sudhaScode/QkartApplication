@@ -1,9 +1,22 @@
 .card {
     height: 100%;
     display: flex;
-    max-width: 100%;
+    width: 100%;
     flex-direction: column;
     justify-content: space-between;
+}
+.card-content{
+    display: flex;
+    flex-direction: column;
+    font-size: 14px !important;
+    font-weight: 600;  
+    padding: 10px !important; 
+    padding-bottom:0px !important ; 
+}
+.card-content p{
+    padding: 6px 0;
+    margin: 0 !important;
+    font-size: 1rem !important;
 }
 
 .card-actions {
@@ -11,6 +24,8 @@
 }
 
 .card-button {
+    margin-top: 0 !important;
     text-transform: none;
     font-weight: 600;
+    height: 30px;
 }
