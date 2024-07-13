@@ -51,6 +51,9 @@ import "./Cart.css";
 export const generateCartItemsFrom = (cartData, productsData) => {
   // console.log(cartData, productsData)
   // filter based on the cartData
+  if(!cartData){
+    return
+  }
   const cartItemDetails = cartData.reduce((acc, item) => {
     const product = productsData.find(
       (product) => product._id === item.productId
@@ -63,7 +66,10 @@ export const generateCartItemsFrom = (cartData, productsData) => {
     }
     return acc;
   }, []);
-
+  // const cartItemDetails = cartData.map((item)=>({
+  //   ...item,
+  //   ...productsData.find((product)=>product._id === item.productId)})
+  //   )
   return cartItemDetails;
 };
 
@@ -78,7 +84,7 @@ export const generateCartItemsFrom = (cartData, productsData) => {
  *
  */
 export const getTotalCartValue = (items = []) => {
-  console.log(items)
+ // console.log(items)
 
   const totlaCartValue = items.reduce((acc,item)=>{
         acc += item.qty*item.cost
@@ -104,14 +110,18 @@ export const getTotalCartValue = (items = []) => {
  */
 const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
   const token = localStorage.getItem("token");
-  const handlerAdd = () => {
+  const handlerAdd = async() => {
     // console.log("updaet")
-    handleAdd(token);
+    setTimeout( await handleAdd(token), 500)
   };
-  const handlerDelete = () => {
-    handleDelete(token);
+  const handlerDelete = async () => {
+    setTimeout(await handleDelete(token), 500)
   };
-
+   useEffect(()=>{
+     return ()=>{
+      clearTimeout();
+     }
+   })
   return (
     <Stack
       direction="row"
@@ -119,25 +129,24 @@ const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
       className="itemquantity-container"
     >
       <IconButton
-        
         color="primary"
         onClick={() => {
           handlerDelete();
         }}
       >
-        <RemoveOutlined className="alter-icon" />
+        <RemoveOutlined  />
       </IconButton>
       <Box padding="0.5rem" data-testid="item-qty">
         {value}
       </Box>
       <IconButton
-      
         color="primary"
         onClick={() => {
           handlerAdd();
         }}
       >
-        <AddOutlined className="alter-icon" />
+        {" "}
+        <AddOutlined />
       </IconButton>
     </Stack>
   );
@@ -165,12 +174,12 @@ rating:5
 _id:"BW0jAAeDJmlZCF8i"
  */
 const Cart = ({ products, cartItems, handleQuantity }) => {
-  const [cartItemsDetails, setCartItemsDetails] = useState([]);
-  // let history = useHistory();
+  //const [cartItemsDetails, setCartItemsDetails] = useState([]);
+  let history = useHistory();
 
-  useEffect(() => {
-    setCartItemsDetails(generateCartItemsFrom(cartItems, products));
-  }, [products, cartItems]);
+  // useEffect(() => {
+  //   setCartItemsDetails(generateCartItemsFrom(cartItems, products));
+  // }, [products, cartItems]);
 
   if (!cartItems.length) {
     return (
@@ -185,9 +194,8 @@ const Cart = ({ products, cartItems, handleQuantity }) => {
 
   return (
     <>
-      {cartItemsDetails &&
-      isReadOnly?
-        cartItemsDetails.map((item) => (
+      {
+        cartItems.map((item) => (
           <Box
             display="flex"
             alignItems="flex-start"
@@ -238,7 +246,7 @@ const Cart = ({ products, cartItems, handleQuantity }) => {
                   }}
                 />
                 <Box padding="0.5rem" fontWeight="700">
-                  ${item.cost * item.qty}
+                  ${item.cost}
                 </Box>
               </Box>
             </Box>
@@ -261,13 +269,13 @@ const Cart = ({ products, cartItems, handleQuantity }) => {
             alignSelf="center"
             data-testid="cart-total"
           >
-            ${getTotalCartValue(cartItemsDetails)}
+            ${getTotalCartValue(cartItems)}
           </Box>
         </Box>
        <Box display="flex" alignitmes="center" justifyContent="flex-end">
-       {cartItemsDetails && 
+       {cartItems && 
         <Button color="success"  variant="contained" sx={{ margin: '1rem', backgroundColor: "#4caf80"}}
-        onClick={()=>{}}>
+        onClick={()=>{  history.push("/checkout")}}>
           <ShoppingCart/>
           {"checkout".toUpperCase()}
         </Button>}

@@ -1,9 +1,9 @@
 import { Search, SentimentDissatisfied } from "@mui/icons-material";
 import {
   CircularProgress,
-  Grid,
   InputAdornment,
   TextField,
+  Grid
 } from "@mui/material";
 import { Box } from "@mui/system";
 import axios from "axios";
@@ -14,7 +14,7 @@ import Footer from "./Footer";
 import Header from "./Header";
 import "./Products.css";
 import ProductCard from "./ProductCard";
-import Cart from "./Cart"
+import Cart, {generateCartItemsFrom} from "./Cart"
 
 // Definition of Data Structures used
 /**
@@ -41,8 +41,6 @@ const Products = () => {
   const [notFound, setNotFound] = useState(false);
   const [timerId, setTimerId] = useState(null);
   const {enqueueSnackbar} = useSnackbar();
-
-
   const [cartItems, setCartItems] = useState([]);
   const isLogin = localStorage.getItem("token")
 
@@ -85,13 +83,20 @@ const Products = () => {
    */
   const performAPICall = async () => {
     let URL = `${config.endpoint}/products`;
+    setNotFound(false);
+    setLoader(true);
    
     try {
       const response = await axios(URL, { timeout: 3000 });
 
       if (response.status === 200) {
         const data = await response.data;
-        setProducts(data)
+        setLoader(false);
+        if(!data){
+          setNotFound(true)
+          return
+        }
+        return data;
         //console.log("PRODUCTS DEBUG:: ",data)
         //return data;
       }
@@ -99,6 +104,8 @@ const Products = () => {
     }
     catch (error) {
       console.log("Fetch failed", error)
+      setLoader(false)
+      setNotFound(false)
     }
 
   };
@@ -230,7 +237,7 @@ const debounceSearch = (event, debounceTimeout) => {
       });
      // console.log(response, "INitial fetch")
       const data = await response.data
-      setCartItems(data)
+      return data;
     } catch (e) {
       
       if (e.response && e.response.status === 400) {
@@ -351,7 +358,7 @@ const debounceSearch = (event, debounceTimeout) => {
     // if cart quantity is alter and item in cart   
     if (isItemInCart(cartItems, productId) && !options.preventDuplicate){
       //if cart item quantity zero remove it from cart by updating with new
-      if(qty <= 0){
+      if(qty === 0){
          
           //let updatedCart = cartItems.filter((item)=>item.productId !== productId)
           //setCartItems(newItemList)
@@ -359,7 +366,7 @@ const debounceSearch = (event, debounceTimeout) => {
             productId: productId,
             qty : qty
           }
-          console.log(updatedCart, "last qty")
+          //console.log(updatedCart, "last qty")
           await addToCartAPICall(updatedCart)
           return
       }
@@ -382,14 +389,19 @@ const addToCartAPICall = async (newItem)=>{
   const URL = `${config.endpoint}/cart`
   //console.log(newItem, "ALtering")
 try{
-   await axios.post(URL, JSON.stringify(newItem),
+   const response = await axios.post(URL, JSON.stringify(newItem),
   {
     headers:{
       Authorization: `Bearer ${isLogin}`, 
       'Content-type': 'application/json',        
     },
   })
-  await fetchCart(isLogin)
+   if(response.status === 200){
+    const cartData  = await response.data;   
+    console.log(cartData, "UPdated Cart") 
+    const cartDetails = await generateCartItemsFrom(cartData, products)
+    setCartItems(cartDetails)
+   }
   // enqueueSnackbar("Product added to cart", { variant: "success" });
 }
 catch(error){
@@ -413,12 +425,14 @@ catch(error){
 // },[cartItems])
 
 useEffect(() => {
-  setNotFound(false);
-  setLoader(true);
- Promise.allSettled([
-  performAPICall(),
-  fetchCart(isLogin)
- ]).then(()=>{setLoader(false)}).catch(()=>{setNotFound(true)})
+ const onLoadHandler =async()=>{
+    const products = await performAPICall()
+    const cartData = await fetchCart(isLogin)
+    setProducts(products)
+    const cartDetails = await generateCartItemsFrom(cartData, products)
+    setCartItems(cartDetails)
+ }
+ onLoadHandler()
 }, []);
 
 return (
@@ -484,9 +498,9 @@ return (
               ))}
             </Grid>}
       </Grid>
-      <Grid item md={3} sm={12} >
+      <Grid item md={3} xs={12} >
        {
-        isLogin && !loader &&
+        isLogin &&
         <Box className= "cart-container">
           <Cart products= {products} cartItems ={cartItems} handleQuantity={addToCart}/>
        </Box>
