@@ -11,11 +11,13 @@ import {
 import React, { useEffect } from "react";
 import "./ProductCard.css";
 
-const ProductCard = ({ product, handleAddToCart }) => {
+const ProductCard = ({ product, products, handleAddToCart, cartItems  }) => {
+ // console.log(handleAddToCart)
+  const token =  localStorage.getItem("token")
   return (
     <Card className="card">
       <CardMedia
-        height="120"
+        height="170"
         component="img"
         image={product.image}
         title={product.name}
@@ -40,6 +42,12 @@ const ProductCard = ({ product, handleAddToCart }) => {
           fullWidth
           variant="contained"
           className = "card-button"
+          onClick={()=>{
+            
+            let productId = product._id
+            let qty = 1
+            let options = { preventDuplicate: true }
+            handleAddToCart(token,cartItems,products, productId, qty, options  )}}
         >
           {" "}
           <AddShoppingCartOutlined /> Add to Cart

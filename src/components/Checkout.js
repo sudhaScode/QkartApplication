@@ -45,15 +45,137 @@ import Header from "./Header";
 
 
 const Checkout = () => {
+  const [items, setCartItems] = useState([]);
+  const [products, setProducts] = useState([]);
+  const {enqueueSnackbar} = useSnackbar();
+  const isLogin = localStorage.getItem("token")
 
 
 
+   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
+  /**
+   * Make API call to get the products list and store it to display the products
+   *
+   * @returns { Array.<Product> }
+   *      Array of objects with complete data on all available products
+   *
+   * API endpoint - "GET /products"
+   *
+   * Example for successful response from backend:
+   * HTTP 200
+   * [
+   *      {
+   *          "name": "iPhone XR",
+   *          "category": "Phones",
+   *          "cost": 100,
+   *          "rating": 4,
+   *          "image": "https://i.imgur.com/lulqWzW.jpg",
+   *          "_id": "v4sLtEcMpzabRyfx"
+   *      },
+   *      {
+   *          "name": "Basketball",
+   *          "category": "Sports",
+   *          "cost": 100,
+   *          "rating": 5,
+   *          "image": "https://i.imgur.com/lulqWzW.jpg",
+   *          "_id": "upLK9JbQ4rMhTwt4"
+   *      }
+   * ]
+   *
+   * Example for failed response from backend:
+   * HTTP 500
+   * {
+   *      "success": false,
+   *      "message": "Something went wrong. Check the backend console for more details"
+   * }
+   */
+   const performAPICall = async () => {
+    let URL = `${config.endpoint}/products`;
+   
+    try {
+      const response = await axios(URL, { timeout: 3000 });
 
+      if (response.status === 200) {
+        const data = await response.data;
+        setProducts(data)
+        //console.log("PRODUCTS DEBUG:: ",data)
+        //return data;
+      }
 
+    }
+    catch (error) {
+      console.log("Fetch failed", error)
+    }
 
+  };
 
+  
+ /**
+   * Perform the API call to fetch the user's cart and return the response
+   *
+   * @param {string} token - Authentication token returned on login
+   *
+   * @returns { Array.<{ productId: string, qty: number }> | null }
+   *    The response JSON object
+   *
+   * Example for successful response from backend:
+   * HTTP 200
+   * [
+   *      {
+   *          "productId": "KCRwjF7lN97HnEaY",
+   *          "qty": 3
+   *      },
+   *      {
+   *          "productId": "BW0jAAeDJmlZCF8i",
+   *          "qty": 1
+   *      }
+   * ]
+   *
+   * Example for failed response from backend:
+   * HTTP 401
+   * {
+   *      "success": false,
+   *      "message": "Protected route, Oauth2 Bearer token not found"
+   * }
+   */
+  const fetchCart = async (token) => {
+    // console.log(token)
+     if (!token) return;
+ 
+     try {
+       // TODO: CRIO_TASK_MODULE_CART - Pass Bearer token inside "Authorization" header to get data from "GET /cart" API and return the response data
+       let URL = `${config.endpoint}/cart`
+       //console.log(URL)
+       const response = await axios.get(URL,{
+         headers: {
+           Authorization: `Bearer ${token}`
+         },
+       });
+      // console.log(response, "INitial fetch")
+       const data = await response.data
+       setCartItems(data)
+     } catch (e) {
+       
+       if (e.response && e.response.status === 400) {
+         enqueueSnackbar(e.response.data.message, { variant: "error" });
+       } else {
+         enqueueSnackbar(
+           "Could not fetch cart details. Check that the backend is running, reachable and returns valid JSON.",
+           {
+             variant: "error",
+           }
+         );
+         //console.log(e)
+       }
+       
+       return null;
+     }
+   };
 
-
+  useEffect(() => {
+    performAPICall()
+    fetchCart(isLogin)
+  }, []);
   return (
     <>
       <Header />
@@ -71,8 +193,6 @@ const Checkout = () => {
             <Divider />
             <Box>
             </Box>
-
-
             <Typography color="#3C3C3C" variant="h4" my="1rem">
               Payment
             </Typography>

@@ -12,7 +12,7 @@ router.get("/", verifyAuth, (req, res) => {
 
 router.post("/", verifyAuth, async (req, res) => {
   console.log(`POST request to "/cart" received`);
-
+  //console.log(req.body.productId, "value body")
   products.findOne({ _id: req.body.productId }, async (err, product) => {
     if (err) {
       return handleError(res, err);

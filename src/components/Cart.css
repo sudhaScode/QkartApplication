@@ -16,11 +16,19 @@
     padding: 1rem;
 }
 
-.image-container {
+.image-container{
     max-height: 10rem;
     max-width: 8rem;
+    min-width: 8rem;
 }
-
+.modifier-box{
+    /* border:2px solid rgba(255, 240, 240, 0.662); */
+    width: 100%;
+    border-radius: 10px;
+}
+.css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root{
+    padding: 0px !important;
+}
 .checkout-btn {
     text-transform: none;
     font-weight: 700;

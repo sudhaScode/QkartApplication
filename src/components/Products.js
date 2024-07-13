@@ -41,6 +41,9 @@ const Products = () => {
   const [notFound, setNotFound] = useState(false);
   const [timerId, setTimerId] = useState(null);
   const {enqueueSnackbar} = useSnackbar();
+
+
+  const [cartItems, setCartItems] = useState([]);
   const isLogin = localStorage.getItem("token")
 
   // TODO: CRIO_TASK_MODULE_PRODUCTS - Fetch products data and store it
@@ -82,13 +85,11 @@ const Products = () => {
    */
   const performAPICall = async () => {
     let URL = `${config.endpoint}/products`;
-    setNotFound(false);
-    setLoader(true);
+   
     try {
       const response = await axios(URL, { timeout: 3000 });
 
       if (response.status === 200) {
-        setLoader(false)
         const data = await response.data;
         setProducts(data)
         //console.log("PRODUCTS DEBUG:: ",data)
@@ -215,11 +216,23 @@ const debounceSearch = (event, debounceTimeout) => {
    * }
    */
   const fetchCart = async (token) => {
+   // console.log(token)
     if (!token) return;
 
     try {
       // TODO: CRIO_TASK_MODULE_CART - Pass Bearer token inside "Authorization" header to get data from "GET /cart" API and return the response data
+      let URL = `${config.endpoint}/cart`
+      //console.log(URL)
+      const response = await axios.get(URL,{
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
+     // console.log(response, "INitial fetch")
+      const data = await response.data
+      setCartItems(data)
     } catch (e) {
+      
       if (e.response && e.response.status === 400) {
         enqueueSnackbar(e.response.data.message, { variant: "error" });
       } else {
@@ -229,7 +242,9 @@ const debounceSearch = (event, debounceTimeout) => {
             variant: "error",
           }
         );
+        //console.log(e)
       }
+      
       return null;
     }
   };
@@ -249,6 +264,11 @@ const debounceSearch = (event, debounceTimeout) => {
    *
    */
   const isItemInCart = (items, productId) => {
+    let foundIndex = items.findIndex((item)=> item.productId === productId)
+    //console.log(foundIndex, "isItemInCart")
+    if(foundIndex>=0)
+          return true
+    return false 
   };
 
   /**
@@ -289,15 +309,116 @@ const debounceSearch = (event, debounceTimeout) => {
    */
   const addToCart = async (
     token,
-    items,
+    cartItems,
     products,
     productId,
     qty,
     options = { preventDuplicate: false }
   ) => {
+   // console.log(qty, "cart event")
+   // whaen user not logged in
+    if(!token){
+      enqueueSnackbar("Login to add an item to the Cart", {variant:"error"})
+      return 
+    }
+    // //if user cart is empty
+    // if(cartItems.length ===0 ){
+    //    let  newItemList = {
+    //       productId: productId,
+    //       qty : qty
+    //     }
+    //     console.log("here::")
+    //    //setCartItems([newItemList])
+    //    await addToCartAPICall(newItemList)
+    //    return
+    //   }
+    // if item in cart but not allowed to alter quantity
+    if(isItemInCart(cartItems, productId) && options.preventDuplicate){
+      enqueueSnackbar("Item already in cart.Use the cart sidebar to update quantity or remove item.", {variant:"warning"})
+       return 
+    }
+    // when adding new item to cart
+    if(!isItemInCart(cartItems, productId) &&  options.preventDuplicate){
+      let  newItemList = {
+        productId: productId,
+        qty : qty
+      }
+      //console.log("here::")
+     //setCartItems([newItemList])
+     await addToCartAPICall(newItemList)
+     return
+    }
+    // if cart quantity is alter and item in cart   
+    if (isItemInCart(cartItems, productId) && !options.preventDuplicate){
+      //if cart item quantity zero remove it from cart by updating with new
+      if(qty <= 0){
+         
+          //let updatedCart = cartItems.filter((item)=>item.productId !== productId)
+          //setCartItems(newItemList)
+          let updatedCart= {
+            productId: productId,
+            qty : qty
+          }
+          console.log(updatedCart, "last qty")
+          await addToCartAPICall(updatedCart)
+          return
+      }
+        let updatedItem = {
+          productId: productId,
+          qty : qty
+        }
+        // setCartItems((prev)=>prev.map((item)=> {
+        //   if(item.productId === productId){
+        //     item.qty= qty
+        //   }
+        //   return item;
+        //   }) );
+        await addToCartAPICall(updatedItem)
+    }
+      //console.log(newItemList)
   };
+//follow up API
+const addToCartAPICall = async (newItem)=>{
+  const URL = `${config.endpoint}/cart`
+  //console.log(newItem, "ALtering")
+try{
+   await axios.post(URL, JSON.stringify(newItem),
+  {
+    headers:{
+      Authorization: `Bearer ${isLogin}`, 
+      'Content-type': 'application/json',        
+    },
+  })
+  await fetchCart(isLogin)
+  // enqueueSnackbar("Product added to cart", { variant: "success" });
+}
+catch(error){
+ // console.log(error)
+  if (error.response && error.response.status >= 400) {
+    // Handle errors based on status code or error object (if present)
+    if (error.response.status === 404) {
+      enqueueSnackbar("Product doesn't exist", { variant: "error" });
+    } else {
+      enqueueSnackbar("Failed to add product to cart", { variant: "error" });
+    }
+  } else {
+    // Handle other unexpected errors
+    enqueueSnackbar("An error occurred", { variant: "error" });
+  }
+}
+}
+// // perform api call for cart when cartaItems changes
+// useEffect(()=>{
+//  // console.log(cartItems, "Updated cart")
+// },[cartItems])
+
 useEffect(() => {
-  performAPICall();
+  setNotFound(false);
+  setLoader(true);
+ Promise.allSettled([
+  performAPICall(),
+  fetchCart(isLogin)
+ ]).then(()=>{setLoader(false)}).catch(()=>{setNotFound(true)})
 }, []);
 
 return (
@@ -357,17 +478,17 @@ return (
             </Box> :
             <Grid container spacing={2} className="grid-container" >
               {products.map((product) => (
-                <Grid item container xs={12} md={3} sm={6} lg={3} key={product._id}>
-                  <ProductCard product={product} />
+                <Grid item container xs={12} md={4} sm={6} lg={3} key={product._id}>
+                  <ProductCard product={product}  products={products} handleAddToCart ={addToCart} cartItems = {cartItems}/>
                 </Grid>
               ))}
             </Grid>}
       </Grid>
       <Grid item md={3} sm={12} >
        {
-        isLogin &&
+        isLogin && !loader &&
         <Box className= "cart-container">
-          <Cart/>
+          <Cart products= {products} cartItems ={cartItems} handleQuantity={addToCart}/>
        </Box>
        }
       </Grid>
