@@ -51,8 +51,8 @@ import "./Cart.css";
 export const generateCartItemsFrom = (cartData, productsData) => {
   // console.log(cartData, productsData)
   // filter based on the cartData
-  if(!cartData){
-    return
+  if (!cartData) {
+    return;
   }
   const cartItemDetails = cartData.reduce((acc, item) => {
     const product = productsData.find(
@@ -84,15 +84,31 @@ export const generateCartItemsFrom = (cartData, productsData) => {
  *
  */
 export const getTotalCartValue = (items = []) => {
- // console.log(items)
+  // console.log(items)
 
-  const totlaCartValue = items.reduce((acc,item)=>{
-        acc += item.qty*item.cost
-        return acc
-  }, 0)
-  return totlaCartValue
-
+  const totlaCartValue = items.reduce((acc, item) => {
+    acc += item.qty * item.cost;
+    return acc;
+  }, 0);
+  //console.log(totlaCartValue)
+  return totlaCartValue;
 };
+
+/**
+ * Get the total value of all products added to the cart
+ *
+ * @param { Array.<CartItem> } items
+ *    Array of objects with complete data on products added to the cart
+ *
+ * @returns { Size }
+ *    Number of items in the cart + quantity
+ *
+ */
+
+export const getTotalItems=(items)=>{
+  let size = items.reduce((acc,item)=>acc +=item.qty,0)
+  return size;
+}
 
 /**
  * Component to display the current quantity for a product and + and - buttons to update product quantity on cart
@@ -108,46 +124,55 @@ export const getTotalCartValue = (items = []) => {
  *
  *
  */
-const ItemQuantity = ({ value, handleAdd, handleDelete }) => {
+const ItemQuantity = ({ isReadOnly, value, handleAdd, handleDelete }) => {
   const token = localStorage.getItem("token");
-  const handlerAdd = async() => {
+  const handlerAdd = async () => {
     // console.log("updaet")
-    setTimeout( await handleAdd(token), 500)
+    // setTimeout(
+    await handleAdd(token); //, 1000)
   };
   const handlerDelete = async () => {
-    setTimeout(await handleDelete(token), 500)
+    //setTimeout(
+    await handleDelete(token); //, 1000)
   };
-   useEffect(()=>{
-     return ()=>{
+  useEffect(() => {
+    return () => {
       clearTimeout();
-     }
-   })
+    };
+  });
   return (
     <Stack
       direction="row"
       alignItems="center"
       className="itemquantity-container"
     >
-      <IconButton
-        color="primary"
-        onClick={() => {
-          handlerDelete();
-        }}
-      >
-        <RemoveOutlined  />
-      </IconButton>
-      <Box padding="0.5rem" data-testid="item-qty">
-        {value}
-      </Box>
-      <IconButton
-        color="primary"
-        onClick={() => {
-          handlerAdd();
-        }}
-      >
-        {" "}
-        <AddOutlined />
-      </IconButton>
+      {isReadOnly ? (
+        <Box padding="0.5rem" data-testid="item-qty">Qty: {value}</Box>
+      ) : (
+        <>
+          {" "}
+          <IconButton
+            color="primary"
+            onClick={() => {
+              handlerDelete();
+            }}
+          >
+            <RemoveOutlined />
+          </IconButton>
+          <Box padding="0.5rem" data-testid="item-qty">
+            {value}
+          </Box>
+          <IconButton
+            color="primary"
+            onClick={() => {
+              handlerAdd();
+            }}
+          >
+            {" "}
+            <AddOutlined />
+          </IconButton>
+        </>
+      )}
     </Stack>
   );
 };
@@ -173,14 +198,22 @@ name:"UNIFACTOR Mens Running Shoes"
 rating:5
 _id:"BW0jAAeDJmlZCF8i"
  */
-const Cart = ({ products, cartItems, handleQuantity }) => {
+const Cart = ({
+  isReadOnly,
+  hasCheckoutButton,
+  products,
+  cartItems,
+  handleQuantity,
+}) => {
   //const [cartItemsDetails, setCartItemsDetails] = useState([]);
   let history = useHistory();
 
   // useEffect(() => {
   //   setCartItemsDetails(generateCartItemsFrom(cartItems, products));
   // }, [products, cartItems]);
-
+  let dynamicRoute = (path) => {
+    history.push(path);
+  };
   if (!cartItems.length) {
     return (
       <Box className="cart empty">
@@ -194,93 +227,129 @@ const Cart = ({ products, cartItems, handleQuantity }) => {
 
   return (
     <>
-      {
-        cartItems.map((item) => (
-          <Box
-            display="flex"
-            alignItems="flex-start"
-            padding="1rem"
-            key={item.productId}
-          >
-            <Box className="image-container">
-              <img
-                src={item.image}
-                alt={item.name}
-                width="100%"
-                height="100%"
-              />
-            </Box>
+      <Box className="cart">
+        {cartItems &&
+          cartItems.map((item) => (
             <Box
               display="flex"
-              flexDirection="column"
-              justifyContent="space-between"
-              height="6rem"
-              paddingX="1rem"
+              alignItems="flex-start"
+              padding="1rem"
+              cla
+              key={item.productId}
             >
-              <div>{item.name}</div>
+              <Box className="image-container">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  width="100%"
+                  height="100%"
+                />
+              </Box>
               <Box
                 display="flex"
+                flexDirection="column"
                 justifyContent="space-between"
-                alignItems="center"
-                className="modifier-box"
+                height="6rem"
+                paddingX="1rem"
               >
-                <ItemQuantity
-                  value={item.qty}
-                  handleAdd={async (token) => {
-                    await handleQuantity(
-                      token,
-                      cartItems,
-                      products,
-                      item.productId,
-                      item.qty + 1
-                    );
-                  }}
-                  handleDelete={async (token) => {
-                    await handleQuantity(
-                      token,
-                      cartItems,
-                      products,
-                      item.productId,
-                      item.qty - 1
-                    );
-                  }}
-                />
-                <Box padding="0.5rem" fontWeight="700">
-                  ${item.cost}
+                <div>{item.name}</div>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  className="modifier-box"
+                >
+                  <ItemQuantity
+                    isReadOnly={isReadOnly?"readOnly":""}
+                    value={item.qty}
+                    handleAdd={async (token) => {
+                      await handleQuantity(
+                        token,
+                        cartItems,
+                        products,
+                        item.productId,
+                        item.qty + 1
+                      );
+                    }}
+                    handleDelete={async (token) => {
+                      await handleQuantity(
+                        token,
+                        cartItems,
+                        products,
+                        item.productId,
+                        item.qty - 1
+                      );
+                    }}
+                  />
+                  <Box padding="0.5rem" fontWeight="700">
+                    ${item.cost}
+                  </Box>
                 </Box>
               </Box>
             </Box>
-          </Box>
-        ))}
-      <Box className="cart" >
-        <Box
-          padding="1rem"
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Box color="#3C3C3C" alignSelf="center">
-            Order total
-          </Box>
+          ))}
+        <Box className="cart-footer">
           <Box
-            color="#3C3C3C"
-            fontWeight="700"
-            fontSize="1.5rem"
-            alignSelf="center"
-            data-testid="cart-total"
+            padding="1rem"
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
           >
-            ${getTotalCartValue(cartItems)}
+            <Box color="#3C3C3C" alignSelf="center">
+              Order total
+            </Box>
+            <Box
+              color="#3C3C3C"
+              fontWeight="700"
+              fontSize="1.5rem"
+              alignSelf="center"
+              data-testid="cart-total"
+            >
+              ${getTotalCartValue(cartItems)}
+            </Box>
+          </Box>
+          <Box display="flex" alignitmes="center" justifyContent="flex-end">
+            {hasCheckoutButton && (
+              <Button
+                color="success"
+                variant="contained"
+                className="checkout-btn"
+                sx={{backgroundColor: "#4caf80" }}
+                onClick={() => {
+                  dynamicRoute("/checkout");
+                }}
+              >
+                <ShoppingCart />
+                {"checkout".toUpperCase()}
+              </Button>
+            )}
           </Box>
         </Box>
-       <Box display="flex" alignitmes="center" justifyContent="flex-end">
-       {cartItems && 
-        <Button color="success"  variant="contained" sx={{ margin: '1rem', backgroundColor: "#4caf80"}}
-        onClick={()=>{  history.push("/checkout")}}>
-          <ShoppingCart/>
-          {"checkout".toUpperCase()}
-        </Button>}
-       </Box>
       </Box>
+      {isReadOnly &&
+        <Box padding="0.5rem" className="cart">
+          <div className="order-header">Order Details</div>
+          <Box direction="col"
+            alignItems="center">
+            <Stack direction="row" justifyContent="space-between" className="order-details" >
+              <div>Products</div>
+              <div>{getTotalItems(cartItems)}</div>
+            </Stack >
+            <Stack direction="row" justifyContent="space-between" className="order-details">
+              <div>SubTotal</div>
+              <div>${getTotalCartValue(cartItems)}</div>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between" className="order-details">
+              <div>Shipping Charges</div>
+              <div>$0</div>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between" className="order-total">
+              <div>Total</div>
+              <div>${getTotalCartValue(cartItems)}</div>
+            </Stack>
+
+          </Box>
+        </Box>}
     </>
   );
 };

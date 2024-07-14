@@ -13,9 +13,18 @@
     border-radius: 5px;
     cursor: pointer;
 }
+.addresses-conatiner{
+    padding: 1rem;
+    border: 1px solid rgb(224, 224, 224);
+    border-radius: 3px;
+    margin:1rem 0;
+    font-family: 'Arial Narrow Bold', sans-serif;
+    cursor: pointer;
+}
 
 .shipping-container {
     padding: 2rem 1rem;
+    background-color: #ffffff;
 }
 
 .selected {

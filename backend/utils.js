@@ -32,6 +32,7 @@ const verifyAuth = (req, res, next) => {
                         message: 'Bad or expired token'
                     });
                 }
+                
                 users.findOne({ username: payload.username }, (err, user) => {
                     if (err) {
                         return handleError(res, err);
@@ -42,6 +43,7 @@ const verifyAuth = (req, res, next) => {
                             message: 'Bad token or user no longer exists'
                         });
                     }
+                    //console.log(payload, "payload")
                     req.user = user;
                     next();
                 });

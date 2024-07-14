@@ -425,7 +425,7 @@ catch(error){
 // },[cartItems])
 
 useEffect(() => {
- const onLoadHandler =async()=>{
+ const onLoadHandler = async()=>{
     const products = await performAPICall()
     const cartData = await fetchCart(isLogin)
     setProducts(products)
@@ -498,12 +498,14 @@ return (
               ))}
             </Grid>}
       </Grid>
-      <Grid item md={3} xs={12} >
+      <Grid item md={3} xs={12}  bgcolor="#E9F5E1">
        {
         isLogin &&
-        <Box className= "cart-container">
-          <Cart products= {products} cartItems ={cartItems} handleQuantity={addToCart}/>
-       </Box>
+     
+          <Cart hasCheckoutButton 
+          products= {products} 
+          cartItems ={cartItems} 
+          handleQuantity={addToCart} />
        }
       </Grid>
     </Grid>

@@ -12,6 +12,7 @@ router.get("/addresses", verifyAuth, (req, res) => {
 
 router.post("/addresses", verifyAuth, (req, res) => {
   console.log(`POST request received to "/cart/addresses"`);
+  console.log(req.body.address)
 
   if (req.body.address.length < 20) {
     return res.status(400).json({

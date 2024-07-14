@@ -63,7 +63,7 @@ router.post("/checkout", verifyAuth, async (req, res) => {
   console.log(
     `POST request received to "/cart/checkout": ${req.user.username}`
   );
-
+  
   let total = 0;
   for (let element of req.user.cart) {
     try {
@@ -76,6 +76,7 @@ router.post("/checkout", verifyAuth, async (req, res) => {
       handleError(res, error);
     }
   }
+  console.log("here")
   if (total === 0) {
     return res.status(400).json({ success: false, message: "Cart is empty" });
   }

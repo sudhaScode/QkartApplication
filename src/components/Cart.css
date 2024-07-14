@@ -24,7 +24,6 @@
 .modifier-box{
     /* border:2px solid rgba(255, 240, 240, 0.662); */
     width: 100%;
-    border-radius: 10px;
 }
 .css-1kuq5xv-MuiButtonBase-root-MuiIconButton-root{
     padding: 0px !important;
@@ -45,4 +44,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+.cart-total{
+    background-color: #ffffff;
+}
+.order-header{
+    font-size: large;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.order-details{
+    font-size: 14px;
+    padding: 5px;
+}
+.order-total{
+    font-size: large;
+    font-weight: bold;
+    padding: 5px;
 }
