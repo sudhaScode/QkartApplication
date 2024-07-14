@@ -16,7 +16,6 @@ const getProduct = (productId) => {
 };
 
 const verifyAuth = (req, res, next) => {
-    //console.log(req.headers, "What fetch")
     if (
         req.headers.authorization &&
         req.headers.authorization.split(' ').length > 1 &&

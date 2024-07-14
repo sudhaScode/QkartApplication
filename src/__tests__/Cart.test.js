@@ -172,14 +172,12 @@ describe("Cart Component", () => {
 
   it("should be able to increase quantity of product in cart", async () => {
     const btn = screen.getAllByTestId("AddOutlinedIcon")[0];
-  
 
     act(() => {
       userEvent.click(btn);
     });
 
     const itemQty = await screen.findAllByTestId("item-qty");
-    console.log(itemQty,"Tetsdsadsa dasdasdsd")
     expect(itemQty[0].textContent).toBe("3");
 
     const cartAddCall = mock.history.post.find(
